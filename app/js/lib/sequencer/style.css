@@ -1,0 +1,40 @@
+body{
+	padding-top: 10px;
+	background-color: #111111;
+	background-image: url(bg.jpg);
+	background-repeat: repeat;
+}
+
+#content{
+    margin-left: auto;
+    margin-right: auto;
+    width: 560px;
+}
+
+td{
+    margin: 1px;
+    padding: 19px;
+    background-color: #003C66;
+    border: 0px solid;
+    border-color: #014383;
+		cursor: pointer;
+}
+
+.selected{
+    background-color: #17EFFA;
+    /*border-color: #9EFFFA;*/
+}
+
+.play{
+    background-color: #0A7CDB;
+    /*border-color: #0BBFFF;*/
+}
+
+#controls{
+	width:150px;
+}
+
+#sequencer{
+	display: none;
+	width:200px; height:380px; position: absolute; left:5px; bottom:20px;
+}

@@ -1,0 +1,23 @@
+{
+  "name": "EIOB",
+  "version": "1.0.0",
+  "description": "Express IV Socket.io Boilerplate",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DonaldDerek/EIOB"
+  },
+  "author": "ddh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DonaldDerek/EIOB/issues"
+  },
+  "homepage": "https://github.com/DonaldDerek/EIOB",
+  "dependencies": {
+    "express": "^4.13.1",
+    "socket.io": "^1.3.6"
+  }
+}

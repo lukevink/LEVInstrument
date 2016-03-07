@@ -2,7 +2,7 @@
 
 
 
-////////////////////////////////////////////////////////////////////////////////
+rows///////////////////////////////////////////////////////////////////////
 // MOUSE FUNCTIONS //
 
 var mouseX = 0,
@@ -185,7 +185,7 @@ function onDocumentMouseUp(event) {
     multiTempSetOnce = false;
 
     //REMOVE WHEN ALL BALLS
-    lev.sendBallPositions();
+    lev.sendBallrows();
 }
 
 
@@ -471,6 +471,7 @@ function dragColumn(ball) {
         var oldY = parseInt(column[i].position.y);
         var newY = parseInt(transformRange(oldY, 0, (positions * 2 * posDist), 0, 15));
         var command = "B" + zeroFill(lev.getBallId(column[i]), 3) + zeroFill(newY, 3);
+
         // if(socket)
         //   socket.emit('ballMoved',{ID:(lev.getBallId(column[i])), y:newY});
         //   // socket.emit('ballY',newY);

@@ -6,14 +6,14 @@ var LevGui = function() {
 
     this.setInteractionMethod = function() {};
 
-    this.setWav = function() {};
-    this.wav_amplitude = wav_amplitude;
-    this.wav_offset = wav_offset;
-    this.wav_crests = wav_crests;
+    // this.setWav = function() {};
+    // this.wav_amplitude = wav_amplitude;
+    // this.wav_offset = wav_offset;
+    // this.wav_crests = wav_crests;
 
     this.setLev = function() {};
     this.columns = columns;
-    this.positions = positions;
+    this.rows = rows;
     this.ballSpeed = ballSpeed;
     this.columnDist = columnDist;
     this.posDist = columnDist;
@@ -56,36 +56,7 @@ window.onload = function() {
 
 
 
-    var renderObjects = gui.addFolder('Render Static Object');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = shapeData(0);
-    }).name('Sphere');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = shapeData(1);
-    }).name('Cube');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = shapeData(2);
-    }).name('Helix');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = shapeData(3);
-    }).name('Torus');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = shapeData(4);
-    }).name('Atom');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = planeFrame(1);
 
-    }).name('Planes');
-    renderObjects.add(levGui, 'nextFrame').onFinishChange(function() {
-        simSelect = 4;
-        nextFrame = genrateRandomNext();
-    }).name('Random Frame');
 
 
 
@@ -93,7 +64,7 @@ window.onload = function() {
     var apps = gui.addFolder('Applications');
     apps.add(levGui, 'nextFrame').onFinishChange(function() {
       simSelect = 6;
-moveAlltoDefault();
+      moveAlltoDefault();
         appSelect = 1;
         $("#sequencer").show();
     }).name('Sequencer');
@@ -109,23 +80,6 @@ moveAlltoDefault();
     }).name('State Change');
 
 
-        var setWav = gui.addFolder('Wave Animation Options');
-        setWav.add(levGui, 'wav_amplitude', 0, 1).onFinishChange(function(newValue) {
-            simSelect = 1;
-            wav_amplitude = newValue;
-        });
-        setWav.add(levGui, 'wav_crests', 0, 20).onFinishChange(function(newValue) {
-            simSelect = 1;
-            wav_crests = newValue;
-        });
-        setWav.add(levGui, 'wav_offset', 0, 1000).step(1).onFinishChange(function(newValue) {
-            simSelect = 1;
-            wav_offset = newValue;
-            orbitYPosition = ((lev.ysize * posDist) - posDist - (wav_offset / 2)) / 2;
-            controls.target.y = orbitYPosition;
-            controls.object.lookAt(controls.target);
-        });
-
 
 
     var setLev = gui.addFolder('Lev Settings');
@@ -133,8 +87,8 @@ moveAlltoDefault();
         columns = newValue;
         resetInlev();
     });
-    setLev.add(levGui, 'positions', 0, 20).step(1).onFinishChange(function(newValue) {
-        positions = newValue;
+    setLev.add(levGui, 'rows', 0, 20).step(1).onFinishChange(function(newValue) {
+        rows = newValue;
         resetInlev();
     });
     setLev.add(levGui, 'ballSpeed', 0, 0.05).onFinishChange(function(newValue) {
@@ -148,20 +102,10 @@ moveAlltoDefault();
         posDist = newValue;
         resetInlev();
     });
-
-    var columnX = 0;
-    var columnZ = 0;
-    var selectCol = gui.addFolder('Select Column');
-    selectCol.add(levGui, 'columnX').onFinishChange(function(newValue) {
-        columnX = newValue
-    });
-    selectCol.add(levGui, 'columnZ').onFinishChange(function(newValue) {
-        columnZ = newValue
-    });
-    selectCol.add(levGui, 'selectColl').onFinishChange(function() {
-        selectColumn(columnX, columnZ)
-    }).name('Select Column');
-    selectCol.add(levGui, 'clear').name('Clear Selection');
+    setLev.add(levGui, 'nextFrame').onFinishChange(function() {
+        nextFrame = genrateRandomNext();
+        animateToFrame = true;
+    }).name('Random Frame');
 
 
 

@@ -104,7 +104,7 @@ void loop()
     if (inChar == '\n') {
       Serial.print("Move Phixel to: ");
       Serial.println(inString.toInt());
-      RF_Send(01, inString.toInt() );
+      RF_Send(1, inString.toInt(), 255, 255, 255 );
       // clear the string for new input:
       inString = "";
     }
@@ -140,7 +140,7 @@ int getHeightFromCombinedCode(int irCode) {
   return irCode && HEIGHT_MASK;
 }
 
-void RF_Send( int ballId, int yPos ) {
+void RF_Send( int ballId, int yPos, int ledR, int ledG, int ledB ) {
 
   //  uint16_t codetoSend = getCombinedCode(ballId,ballYpos);
   //  uint8_t data[] = (uint8_t*)&thing;

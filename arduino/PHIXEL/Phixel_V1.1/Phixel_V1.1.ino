@@ -1,4 +1,4 @@
-// PHIXEL V1.0 - Custom Encoder
+// PHIXEL V1.1 - Full Comms
 // LUKE VINK 2016
 
 #include <Encoder.h>
@@ -17,7 +17,7 @@ int ballYpos = 00; // 0..65535 (0x0000 - 0xFFFF)
 const int LED_ORANGE = A3;
 const int LED_BLUE = 5;
 const int CE = 9;
-const int CSN = 10; 
+const int CSN = 10;
 const int NEOPIXEL_PIN = 7;
 const int NUMBER_NEOPIXEL = 2;
 const int M1_DIR = 4;
@@ -36,7 +36,7 @@ int counter = 0;
 int incomingByte = 0;
 unsigned int touchX = 0;
 unsigned int touchY = 0;
-boolean touched = false;
+int touched = 0;
 int touchRange = 60;
 
 //Define Motors
@@ -105,16 +105,23 @@ void loop() {
   //WIRELESS
   RF_Recieve();
   touched = false;
-  lightsOff();
+//  lightsOff();
 
   //CAPACITIVE TOUCH
   readSensorValues();
-//  delay(50);
-  for (int i = 0; i < 15; i++) {
-    if (sensorValues[i] > touchRange) {
-      touched = true;
-    }
-    //RF_Send((int)sensorValues[i]);
+  
+//  for (int i = 0; i < 15; i++) {
+//    if (sensorValues[i] > touchRange) {
+//      touched = true;
+//    }
+//    //RF_Send((int)sensorValues[i]);
+//  }
+
+  if (sensorValues[12] > touchRange){
+    touched = 2; // UP
+  }
+  if (sensorValues[11] > touchRange){
+    touched = 1; // DOWN
   }
 
 
@@ -131,7 +138,8 @@ void loop() {
         lightsDown();
       }
     oldPosition = newPosition;
-        RF_Send(newPosition); //Slows shit down, makes steps innacurate
+     RF_Send();
+//    RF_Send(newPosition); //Slows shit down, makes steps innacurate
   }
 
   //CONTROLLED MOVEMENT
@@ -152,7 +160,7 @@ void loop() {
     if (sensorValues[11] > touchRange)
       phixelDown(maxSpeed);
   }
-  
+
 
   if (touched)
     lightsTouched();
@@ -228,6 +236,11 @@ void lightsTouched() {
   pixels.setPixelColor(1, pixels.Color(240, 0, 240));
 }
 
+void setColor(int ledR, int ledG, int ledB){
+  pixels.setPixelColor(0, pixels.Color(ledR, ledG, ledB));
+  pixels.setPixelColor(1, pixels.Color(ledR, ledG, ledB));
+}
+
 
 
 // --------------------------------------------------------------------------------> WIRELESS <----------------------------- //
@@ -235,51 +248,66 @@ void lightsTouched() {
 void RF_Recieve() {
   if (nrf24.available())
   {
-    uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
-    if (nrf24.recv(buf, &len))
-    {
-      phixelStop();
-      goal = *(int*)buf;
-      digitalWrite(LED_BLUE, HIGH);
-      // Send a reply
-      uint8_t data[] = "Recieved";
-      nrf24.send(data, sizeof(data));
-      nrf24.waitPacketSent();
+    uint8_t inMessage[RH_NRF24_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(inMessage);
+    if (nrf24.recv(inMessage, &len)) {
+      
+      if (inMessage[0] == ballId) {
+        
+        //Update Phixel
+        phixelStop();
+        setColor(inMessage[2],inMessage[3],inMessage[4]);
+        goal = inMessage[1];
+        
+        digitalWrite(LED_BLUE, HIGH); //Show message recieved
+        
+        // Send a reply
+//        uint8_t data[] = "Recieved";
+//        nrf24.send(data, sizeof(data));
+//        nrf24.waitPacketSent();
+          RF_Send();
+      }
+      
     } else {
       digitalWrite(LED_ORANGE, HIGH);
     }
+
     delay(20);
     digitalWrite(LED_ORANGE, LOW);
     digitalWrite(LED_BLUE, LOW);
   }
 }
 
-void RF_Send( int thing ) {
 
-  //  uint16_t codetoSend = getCombinedCode(ballId,ballYpos);
-  //  uint8_t data[] = (uint8_t*)&thing;
+void RF_Send() {
 
-  int thedata = thing;
+  digitalWrite(LED_BLUE, HIGH);
 
-  nrf24.send((uint8_t*)&thedata, sizeof(thedata));
+  uint8_t sendMessage[3];
+
+  sendMessage[0] = ballId;
+  sendMessage[1] = ballYpos;
+  sendMessage[2] = touched;
+
+  nrf24.send(sendMessage, sizeof(sendMessage));
   nrf24.waitPacketSent();
 
   // Now wait for a reply
-  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
+//  uint8_t buf[RH_NRF24_MAX_MESSAGE_LEN];
+//  uint8_t len = sizeof(buf);
+//
+//  if (nrf24.waitAvailableTimeout(200))
+//  {
+//    // Should be a reply message for us now
+//    if (nrf24.recv(buf, &len)) {
+//      digitalWrite(LED_BLUE, HIGH);
+//    } else {
+//      digitalWrite(LED_ORANGE, HIGH);
+//    }
+//  } else {
+//    digitalWrite(LED_ORANGE, HIGH);
+//  }
 
-  if (nrf24.waitAvailableTimeout(200))
-  {
-    // Should be a reply message for us now
-    if (nrf24.recv(buf, &len)) {
-      digitalWrite(LED_BLUE, HIGH);
-    } else {
-      digitalWrite(LED_ORANGE, HIGH);
-    }
-  } else {
-    digitalWrite(LED_ORANGE, HIGH);
-  }
   delay(10);
   digitalWrite(LED_BLUE, LOW);
   digitalWrite(LED_ORANGE, LOW);
@@ -287,21 +315,7 @@ void RF_Send( int thing ) {
 
 
 
-//WIRELESS PROTOCOL
 
-uint16_t getCombinedCode(int ballId, int targetHeight) {
-  uint16_t codeToSend = (ballId * 256 + targetHeight);
-  return codeToSend;
-}
-
-
-int getBallIdFromCombinedCode(int rfCode) {
-  return rfCode >> 8;
-}
-
-int getHeightFromCombinedCode(int rfCode) {
-  return rfCode & HEIGHT_MASK;
-}
 
 
 // ----------------------------------------------------------------------------> CAPACITIVE TOUCH CONTROLLER <------------------- //

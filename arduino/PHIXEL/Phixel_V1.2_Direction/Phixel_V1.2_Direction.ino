@@ -1,14 +1,11 @@
-// PHIXEL V1.1 - Full Comms
+// PHIXEL V1.2 - Guided Direction
 // LUKE VINK 2016
 
-#define ENCODER_DO_NOT_USE_INTERRUPTS
 
 #include <SPI.h>
 #include <Wire.h>
 #include <RH_NRF24.h>
 #include <Adafruit_NeoPixel.h>
-//#include "I2Cdev.h"
-#include <Encoder.h>
 
 
 //Define Ball
@@ -53,8 +50,8 @@ bool moving = false;
 
 //Encoder:
 int motorDir = 0;
-Encoder myEnc(2, 3);
 long oldPosition = 0;
+long newPosition = 0;
 
 
 RH_NRF24 nrf24(CE, CSN);// CE, CSN pins
@@ -70,6 +67,8 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_NEOPIXEL, NEOPIXEL_PIN, NEO_
 
 void setup() {
  
+  attachInterrupt(digitalPinToInterrupt(2), updatePos, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(3), updatePos, CHANGE);
 
   pinMode(LED_ORANGE, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
@@ -140,16 +139,13 @@ void loop() {
 
 
   //POSITION
-  long newPosition;
-  newPosition = myEnc.read();
-  if (newPosition != oldPosition) {
-    if (newPosition > oldPosition)
+  if (ballYpos != oldPosition) {
+    if (ballYpos > oldPosition)
         lightsUp();
-    if (newPosition < oldPosition)
+    if (ballYpos < oldPosition)
         lightsDown();
-    oldPosition = newPosition;
-    ballYpos = newPosition;
-//    Serial.println(newPosition);
+    oldPosition = ballYpos;
+    Serial.println(newPosition);
 //    RF_Send(); //Slows shit down, makes steps innacurate
   }
 
@@ -157,20 +153,25 @@ void loop() {
   //CONTROLLED MOVEMENT
   if (!touched) {
     if ( newPosition < (goal + error) && newPosition > (goal - error)) {
+      //REACHED GOAL
       phixelBrake();
       if (moving) {
           moving = false;
     //        RF_Send();
       }
     } else {
+      //REACHED GOAL
       gotoPos(newPosition);
     }
   } else {
     if (sensorValues[12] > touchRange){ 
+      motorDir = 1;
       phixelUp(maxSpeed);
     } else if (sensorValues[11] > touchRange) {
+      motorDir = 2;
       phixelDown(maxSpeed);
     } else {
+      motorDir = 0;
       phixelBrake();
     }
   }
@@ -192,20 +193,12 @@ void loop() {
 //CLOCKWISE
 void gotoPos(int pos) {
   if (pos < (goal - error)) {
-    if (pos > (goal - slowBuffer)) {
-      bufferSpeed = ((goal - pos) * ((maxSpeed - minSpeed) / slowBuffer)) + minSpeed - 20;
-      phixelUp(bufferSpeed);
-    } else {
-      phixelUp(maxSpeed);
-    }
+     phixelUp(maxSpeed);
+     motorDir = 1;
   }
   if (pos > (goal + error)) {
-    if (pos < (goal + slowBuffer)) {
-      bufferSpeed = ((pos - goal) *  ((maxSpeed - minSpeed) / slowBuffer)) + minSpeed - 20;
-      phixelDown(bufferSpeed);
-    } else {
-      phixelDown(maxSpeed);
-    }
+     phixelDown(maxSpeed);
+     motorDir = 2;
   }
   moving = true;
 }
@@ -400,6 +393,25 @@ void setBaseline(uint8_t address) {
   Wire.write(0x04);
   Wire.write(0x01);
   Wire.endTransmission();
+}
+
+
+
+
+void updatePos(){
+    switch (motorDir) {
+    case 1:
+      //UP
+        ballYpos++;
+      break;
+    case 2:
+      //DOWN
+        ballYpos--;
+      break;
+    default: 
+      
+    break;
+  }
 }
 
 

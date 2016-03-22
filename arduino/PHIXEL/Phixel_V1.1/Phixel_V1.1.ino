@@ -1,5 +1,6 @@
 // PHIXEL V1.1 - Full Comms
 // LUKE VINK 2016
+//#define ENCODER_OPTIMIZE_INTERRUPTS
 
 #include <Encoder.h>
 #include <SPI.h>
@@ -15,13 +16,13 @@ int ballYpos = 00; // 0..65535 (0x0000 - 0xFFFF)
 
 //Define Pins
 const int LED_ORANGE = A3;
-const int LED_BLUE = 5;
+const int LED_BLUE = 4;
 const int CE = 9;
 const int CSN = 10;
 const int NEOPIXEL_PIN = 7;
 const int NUMBER_NEOPIXEL = 2;
-const int M1_DIR = 4;
-const int M1_PWM = 6;
+const int M1_xIN1 = 6;
+const int M1_xIN2 = 5;
 const int LOW_BATTARY = A0;
 const int IRQ = 8; //Not currently used
 
@@ -67,6 +68,8 @@ uint8_t message_send[3] = {256, 256, 256};
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_NEOPIXEL, NEOPIXEL_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
+ 
+
   pinMode(LED_ORANGE, OUTPUT);
   pinMode(LED_BLUE, OUTPUT);
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
@@ -85,15 +88,22 @@ void setup() {
   //ENCODER + MOTOR
   digitalWrite(2, HIGH);
   digitalWrite(3, HIGH);
-
-  pinMode(M1_DIR, OUTPUT);
-  pinMode(M1_PWM, OUTPUT);
+//  attachInterrupt(digitalPinToInterrupt(2), isr2, CHANGE);
+//  attachInterrupt(digitalPinToInterrupt(3), isr3, CHANGE);
+  pinMode(M1_xIN1, OUTPUT);
+  pinMode(M1_xIN2, OUTPUT);
   delay(500);
 
 
   Wire.begin();
   setSensorValuesToZero();
   setBaseline(i2caddr_default);
+
+    
+  pinMode(LED_BLUE, HIGH);
+
+  Serial.begin(9600);
+  Serial.println("PHIXEL");
 
 }
 
@@ -104,12 +114,15 @@ void loop() {
 
   //WIRELESS
   RF_Recieve();
-  touched = false;
+  touched = 0;
+
+  
 //  lightsOff();
 
   //CAPACITIVE TOUCH
   readSensorValues();
-  
+
+//  TEST CAPACITIVE
 //  for (int i = 0; i < 15; i++) {
 //    if (sensorValues[i] > touchRange) {
 //      touched = true;
@@ -127,47 +140,49 @@ void loop() {
 
 
   //POSITION
-  long newPosition = myEnc.read();
+  long newPosition;
+  newPosition = myEnc.read();
   if (newPosition != oldPosition) {
     if (newPosition > oldPosition)
-      if (!touched) {
         lightsUp();
-      }
     if (newPosition < oldPosition)
-      if (!touched) {
         lightsDown();
-      }
     oldPosition = newPosition;
-     RF_Send();
-//    RF_Send(newPosition); //Slows shit down, makes steps innacurate
+    ballYpos = newPosition;
+    Serial.println(newPosition);
+//    RF_Send(); //Slows shit down, makes steps innacurate
   }
 
+
   //CONTROLLED MOVEMENT
-  //  if ( newPosition == goal) {
   if (!touched) {
     if ( newPosition < (goal + error) && newPosition > (goal - error)) {
-      phixelStop();
+      phixelBrake();
       if (moving) {
-        //        RF_Send(newPosition);
-        moving = false;
+          moving = false;
+    //        RF_Send();
       }
     } else {
       gotoPos(newPosition);
     }
   } else {
-    if (sensorValues[12] > touchRange)
+    if (sensorValues[12] > touchRange){ 
       phixelUp(maxSpeed);
-    if (sensorValues[11] > touchRange)
+    } else if (sensorValues[11] > touchRange) {
       phixelDown(maxSpeed);
+    } else {
+      phixelBrake();
+    }
   }
 
 
-  if (touched)
-    lightsTouched();
+//  if (touched)
+//    lightsTouched();
 
 
   //PIXELS
   pixels.show();
+
 
 }
 
@@ -198,22 +213,29 @@ void gotoPos(int pos) {
 //CLOCKWISE
 void phixelUp(int ballSpeed) {
   motorDir = 1;
-  digitalWrite(M1_DIR, HIGH);
-  analogWrite(M1_PWM, ballSpeed);
+  digitalWrite(M1_xIN1, HIGH);
+  digitalWrite(M1_xIN2, LOW);
 }
 
 //ANTICLOCKWISE
 void phixelDown(int ballSpeed) {
   motorDir = -1;
-  digitalWrite(M1_DIR, LOW);
-  analogWrite(M1_PWM, ballSpeed);
+  digitalWrite(M1_xIN1, LOW);
+  digitalWrite(M1_xIN2, HIGH);
 }
 
 //STOP
-void phixelStop() {
+void phixelCoast() {
   motorDir = 0;
-  digitalWrite(M1_DIR, LOW);
-  analogWrite(M1_PWM, 0);
+  digitalWrite(M1_xIN1, LOW);
+  digitalWrite(M1_xIN2, LOW);
+}
+
+//STOP
+void phixelBrake() {
+  motorDir = 0;
+  digitalWrite(M1_xIN1, HIGH);
+  digitalWrite(M1_xIN2, HIGH);
 }
 
 void lightsUp() {
@@ -255,7 +277,7 @@ void RF_Recieve() {
       if (inMessage[0] == ballId) {
         
         //Update Phixel
-        phixelStop();
+        phixelBrake();
         setColor(inMessage[2],inMessage[3],inMessage[4]);
         goal = inMessage[1];
         
@@ -380,27 +402,5 @@ void setBaseline(uint8_t address) {
   Wire.endTransmission();
 }
 
-//
-//
-//void readSensorValues2() {
-//
-//        int8_t count  = 0;
-//
-//        I2Cdev::i2c_start(0x4A); //default address is 0x25 or b100101
-//  	I2Cdev::i2c_write(0x80);
-//  	I2Cdev::i2c_stop();
-//       // delayMicroseconds(6);
-//  	I2Cdev::i2c_start(0x4B);
-//  	//delayMicroseconds(6);
-//  	for (; count < length;) {
-//    		data[count] = I2Cdev::i2c_read(false);
-//    		count++;
-//    	}
-//    	I2Cdev::i2c_read(true);
-//    	I2Cdev::i2c_stop();
-//
-//
-//}
-//
-//
+
 

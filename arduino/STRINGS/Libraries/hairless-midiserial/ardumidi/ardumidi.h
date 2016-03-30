@@ -54,10 +54,10 @@
 #define MIDI_PITCH_BEND        0xE0
 
 struct MidiMessage {
-	byte command;
-	byte channel;
-	byte param1;
-	byte param2;
+	int command;
+	int channel;
+	int param1;
+	int param2;
 };
 
 // MIDI in
@@ -76,7 +76,7 @@ int midi_message_available();
 MidiMessage read_midi_message();
 int get_pitch_bend(MidiMessage msg);
 
-// Other 
+// Other
 void midi_print(char* msg, int len);
 void midi_comment(char* msg);
 

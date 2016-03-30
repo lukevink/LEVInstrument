@@ -11,22 +11,21 @@ var LevGui = function() {
     // this.wav_offset = wav_offset;
     // this.wav_crests = wav_crests;
 
-    this.setLev = function() {};
     this.columns = columns;
     this.rows = rows;
     this.ballSpeed = ballSpeed;
     this.columnDist = columnDist;
     this.posDist = columnDist;
 
-    this.set3D = function() {};
-    this.nextFrame = function() {};
-
     this.columnX = 0;
     this.columnZ = 0;
 
+    this.setLev = function() {};
     this.selectColl = function() {};
-
     this.selectSim2 = function() {};
+    this.set3D = function() {};
+    this.nextFrame = function() {};
+    this.calibrate = function() {};
 
 };
 
@@ -63,26 +62,26 @@ window.onload = function() {
 
     var apps = gui.addFolder('Applications');
     apps.add(levGui, 'nextFrame').onFinishChange(function() {
-      simSelect = 6;
       moveAlltoDefault();
-        appSelect = 1;
+        appSelect = 2;
         $("#sequencer").show();
-    }).name('Sequencer');
+    }).name('--> Sequencer');
 
     apps.add(levGui, 'nextFrame').onFinishChange(function() {
+        appSelect = 3;
         wav_crests = 2;
         wav_amplitude = 0.1;
         scriptedBeginTime = millis;
         setWater();
-        simSelect = 5;
         $("#sequencer").hide();
 
-    }).name('State Change');
+    }).name('--> State Change');
 
 
 
 
     var setLev = gui.addFolder('Lev Settings');
+
     setLev.add(levGui, 'columns', 0, 20).step(1).onFinishChange(function(newValue) {
         columns = newValue;
         resetInlev();
@@ -106,6 +105,9 @@ window.onload = function() {
         nextFrame = genrateRandomNext();
         animateToFrame = true;
     }).name('Random Frame');
+    setLev.add(levGui, 'calibrate').onFinishChange(function() {
+        appSelect = 1;
+    }).name('--> Callibrate');
 
 
 

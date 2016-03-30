@@ -41,10 +41,14 @@ if (typeof(io) != "undefined") {
             y: 2
         });
     });
+
 }
 
 //Materials
 var materialDefault = new THREE.MeshLambertMaterial({color: 0xcccccc});
+var materialUncalibrated = new THREE.MeshLambertMaterial({color: 0xFF0000});
+var materialCalibrated = new THREE.MeshLambertMaterial({color: 0x00FF1A});
+var materialSelected = new THREE.MeshLambertMaterial({color: 0xFF00FF});
 
 //Sequencer Materials
 var materialLive = new THREE.MeshLambertMaterial({color: 0x17EFFA});
@@ -118,7 +122,7 @@ var mouse = new THREE.Vector2(),
                         container.add(thing);
                         balls[i] = thing;
                         ballsDefYPos[i] = ypos;
-                        balls[i].userData = {  play : true, live: false };
+                        balls[i].userData = {  play : true, live: false, uniqueID:0 };
                         ballsRemoveYPos[i] = stringHeight + (y*posDist) - (blockHeight/2);
                         i++;
                     }
@@ -664,5 +668,31 @@ var mouse = new THREE.Vector2(),
         if(appSelect)
             runApplication(appSelect);
 
+
+    }
+
+
+
+
+
+    function runApplication(app){
+
+      switch(app) {
+          case 0:
+
+              break;
+          case 1:
+              //CALBIRATION
+              appCalibration();
+              break;
+          case 2:
+          //SEQUENCER
+              break;
+          case 3:
+          //INSTRUMENT
+              break;
+          default:
+
+      }
 
     }

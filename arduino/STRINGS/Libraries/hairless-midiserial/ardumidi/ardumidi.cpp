@@ -85,10 +85,10 @@ void midi_comment(char* msg)
 }
 
 int midi_message_available() {
-	/* 
+	/*
 	   This bit will check that next bytes to be read would actually
 	   have the midi status bit. If not it will remove uncorrect bytes
-	   from internal buffer 
+	   from internal buffer
 	   */
 	while ((Serial.available() > 0) && ((Serial.peek() & B10000000) != 0x80)) {
 		Serial.read();
@@ -119,4 +119,3 @@ MidiMessage read_midi_message() {
 int get_pitch_bend(MidiMessage m) {
 	return (m.param1 & 0x7F) + ((m.param2 & 0x7F) << 7);
 }
-

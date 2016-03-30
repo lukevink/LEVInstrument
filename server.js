@@ -6,7 +6,7 @@ var io = require('socket.io')(server);
 var staticRoot = path.join(__dirname+'/app/');
 var serialport = require("serialport");
 var SerialPort = serialport.SerialPort; // localize object constructor
-var arduino = new SerialPort("/dev/tty.usbmodem1411", {baudrate: 9600});
+var arduino = new SerialPort("/dev/tty.usbmodem1421", {baudrate: 9600});
 
 var isOpen = false;
 
@@ -31,9 +31,9 @@ io.on('connection', function (socket) {
       arduino.write("H");
   });
 
-  // socket.on('ballMoved', function (data) {
-  //   console.log(data)
-  // });
+  socket.on('ballMoved', function (data) {
+    console.log(data)
+  });
 
   // socket.on('ballY', function (data) {
   //   if(isOpen)
@@ -49,6 +49,12 @@ io.on('connection', function (socket) {
       arduino.write(data);
       console.log(data)
 
+  });
+
+  socket.on('callibrate', function (data) {
+    console.log("----------- CALLIBRATION INITIATED -----------")
+    if(isOpen)
+      arduino.write("S");
   });
 
 

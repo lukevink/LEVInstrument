@@ -2,7 +2,7 @@
 
 
 
-rows///////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////
 // MOUSE FUNCTIONS //
 
 var mouseX = 0,
@@ -179,6 +179,10 @@ function onDocumentMouseMove(event) {
 
 function onDocumentMouseUp(event) {
     // Enable the controls
+
+    if(lev.selection)
+        sendBallPosition(lev.selection);
+
     controls.enabled = true;
     lev.selection = null;
     mouseClicked = false;
@@ -423,6 +427,8 @@ function planeInterpolation(ball) {
 
 //
 
+
+
 function dragColumn(ball) {
 
     var column = selectColumnByBall(ball);
@@ -469,7 +475,7 @@ function dragColumn(ball) {
 
 
         var oldY = parseInt(column[i].position.y);
-        var newY = parseInt(transformRange(oldY, 0, (positions * 2 * posDist), 0, 15));
+        var newY = parseInt(transformRange(oldY, 0, (rows * 2 * posDist), 0, 15));
         var command = "B" + zeroFill(lev.getBallId(column[i]), 3) + zeroFill(newY, 3);
 
         // if(socket)
@@ -479,6 +485,33 @@ function dragColumn(ball) {
     }
 
 }
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////// NODE COMMUNICATION //////////////////////////////////////////////////////////////////
+
+function sendBallPosition(theball){
+
+  var oldY = parseInt(theball.position.y);
+  var newY = parseInt(transformRange(oldY, 0, (rows * 2 * posDist), 0, 15));
+  var command = "B" + zeroFill(lev.getBallId(theball), 3) + zeroFill(newY, 3) + zeroFill(floatto255(theball.material.color.r), 3) + zeroFill(floatto255(theball.material.color.g), 3) + zeroFill(floatto255(theball.material.color.b), 3) ;
+
+  if(socket)
+    // socket.emit('ballMoved',{ID:(lev.getBallId(ball)), y:ball.position.y});
+    // socket.emit('ballY',newY);
+    socket.emit('ballCommand',command)
+
+}
+
+function floatto255(value){
+  return transformRange(value, 0, 1, 0, 255);
+}
+
+
+
 
 
 

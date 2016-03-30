@@ -206,6 +206,12 @@ void serialEvent() {
     Serial.println("< - - - - - - CONNECTED TO SERVER - - - - - - >");
   }
 
+  if (incomingByte == 'S') {
+    digitalWrite(LED_BLUE, HIGH);
+    digitalWrite(LED_RED, HIGH);
+    Serial.println("< - - - - - - CALLIBRATION INITIATED - - - - - - >");
+  }
+
   //EG:  B001000255255255
 
   if (incomingByte == 'B') {

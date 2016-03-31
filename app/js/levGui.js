@@ -62,20 +62,27 @@ window.onload = function() {
 
     var apps = gui.addFolder('Applications');
     apps.add(levGui, 'nextFrame').onFinishChange(function() {
-      moveAlltoDefault();
+        moveAlltoDefault();
         appSelect = 2;
         $("#sequencer").show();
     }).name('--> Sequencer');
 
     apps.add(levGui, 'nextFrame').onFinishChange(function() {
+        moveAlltoDefault();
+        appSelect = 2;
+        $("#sequencer").hide();
+
+    }).name('--> Instrument');
+
+    apps.add(levGui, 'nextFrame').onFinishChange(function() {
         appSelect = 3;
+
         wav_crests = 2;
         wav_amplitude = 0.1;
         scriptedBeginTime = millis;
-        setWater();
         $("#sequencer").hide();
 
-    }).name('--> State Change');
+    }).name('--> Waves');
 
 
 

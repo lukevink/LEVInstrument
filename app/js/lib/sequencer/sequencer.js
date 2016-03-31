@@ -14,12 +14,14 @@ function loadSoundBank(soundBankName){
         if(sound != null){
             sound.destruct();
         }
+
         var aSoundObject = soundManager.createSound({
             autoLoad: true,
             stream: false,
             id: 'sound'+i,
             url:'js/lib/sequencer/sounds/'+soundBankName+''+i+'.mp3',
         }).load();
+
     }
 }
 

@@ -67,7 +67,7 @@ Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMBER_NEOPIXEL, NEOPIXEL_PIN, NEO_
 
 void setup() {
  
-  attachInterrupt(digitalPinToInterrupt(2), updatePos, CHANGE);
+  attachInterrupt(digitalPinToInterrupt(3), updatePos, CHANGE);
 //  attachInterrupt(digitalPinToInterrupt(3), updatePos, CHANGE);
 
   pinMode(LED_ORANGE, OUTPUT);
@@ -140,12 +140,17 @@ void loop() {
 
   //POSITION
   if (ballYpos != oldPosition) {
-    if (ballYpos > oldPosition)
+    if (ballYpos > oldPosition){
         lightsUp();
-    if (ballYpos < oldPosition)
+        oldPosition = ballYpos;
+        Serial.println(ballYpos);
+    }
+    if (ballYpos < oldPosition){
         lightsDown();
-    oldPosition = ballYpos;
-    Serial.println(newPosition);
+        oldPosition = ballYpos;
+        Serial.println(ballYpos);
+    }
+
 //    RF_Send(); //Slows shit down, makes steps innacurate
   }
 
@@ -168,7 +173,7 @@ void loop() {
       motorDir = 1;
       phixelUp(maxSpeed);
     } else if (sensorValues[11] > touchRange) {
-      motorDir = 2;
+      motorDir = -1;
       phixelDown(maxSpeed);
     } else {
       motorDir = 0;
@@ -184,6 +189,10 @@ void loop() {
   //PIXELS
   pixels.show();
 
+  if(digitalRead(LOW_BATTARY) == HIGH){
+       lightsLowBattery();
+  }
+
 
 }
 
@@ -194,11 +203,9 @@ void loop() {
 void gotoPos(int pos) {
   if (pos < (goal - error)) {
      phixelUp(maxSpeed);
-     motorDir = 1;
   }
   if (pos > (goal + error)) {
      phixelDown(maxSpeed);
-     motorDir = 2;
   }
   moving = true;
 }
@@ -251,10 +258,23 @@ void lightsTouched() {
   pixels.setPixelColor(1, pixels.Color(240, 0, 240));
 }
 
+void lightsLowBattery() {
+    pixels.setPixelColor(0, pixels.Color(240, 0, 0));
+    pixels.setPixelColor(1, pixels.Color(240, 0, 0));
+    pixels.show();
+    delay(50);
+    pixels.setPixelColor(0, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(1, pixels.Color(0, 0, 0));
+    pixels.show();
+    delay(30);
+}
+
 void setColor(int ledR, int ledG, int ledB){
   pixels.setPixelColor(0, pixels.Color(ledR, ledG, ledB));
   pixels.setPixelColor(1, pixels.Color(ledR, ledG, ledB));
 }
+
+
 
 
 
@@ -266,7 +286,8 @@ void RF_Recieve() {
     uint8_t inMessage[RH_NRF24_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(inMessage);
     if (nrf24.recv(inMessage, &len)) {
-      
+      digitalWrite(LED_ORANGE, HIGH);
+
       if (inMessage[0] == ballId) {
         
         //Update Phixel
@@ -402,11 +423,11 @@ void updatePos(){
     switch (motorDir) {
     case 1:
       //UP
-        ballYpos++;
+        ballYpos = ballYpos+1;
       break;
-    case 2:
+    case -1:
       //DOWN
-        ballYpos--;
+        ballYpos = ballYpos-1;
       break;
     default: 
       

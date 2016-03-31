@@ -500,15 +500,35 @@ function sendBallPosition(theball){
   var command = "B" + zeroFill(lev.getBallId(theball), 3) + zeroFill(newY, 3) + zeroFill(floatto255(theball.material.color.r), 3) + zeroFill(floatto255(theball.material.color.g), 3) + zeroFill(floatto255(theball.material.color.b), 3) ;
 
   if(socket)
-    // socket.emit('ballMoved',{ID:(lev.getBallId(ball)), y:ball.position.y});
-    // socket.emit('ballY',newY);
-    socket.emit('ballCommand',command)
+    socket.emit('ballCommand',command);
 
 }
 
 function floatto255(value){
   return transformRange(value, 0, 1, 0, 255);
 }
+
+
+function makeAllBallsColor(r,g,b){
+
+  for (var b = 0; b < lev.balls.size; b++) {
+    var command = "B" + zeroFill(lev.getBallId(b), 3) + zeroFill(999, 3) + zeroFill(r, 3) + zeroFill(g, 3) + zeroFill(b, 3);
+    if(socket)
+      socket.emit('ballCommand',command);
+  }
+
+}
+
+
+
+////////////// KEY PRESS ///////////////
+
+$(document).keypress(function(e) {
+    if(e.which == 13) {
+        if(!newCalID)
+          newCalID = true;
+    }
+});
 
 
 

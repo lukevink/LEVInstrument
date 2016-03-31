@@ -4,7 +4,8 @@
 #include <SPI.h>
 #include <RH_NRF24.h>
 
-bool debug = true; //print debug text in serial (effects server)
+bool debug = false; //print debug text in serial (effects server)
+bool calibration = false;
 
 //Define Pins
 const int LED_RED = 8;
@@ -54,16 +55,16 @@ void setup()
   delay(300);
 
   if (!nrf24.init()) {
-    Serial.println("init failed");
+    Serial.println("NRF init failed");
     digitalWrite(LED_RED, HIGH);
   }
   // Defaults after init are 2.402 GHz (channel 2), 2Mbps, 0dBm
   if (!nrf24.setChannel(1)) {
-    Serial.println("setChannel failed");
+    Serial.println("NRF setChannel failed");
     digitalWrite(LED_RED, HIGH);
   }
   if (!nrf24.setRF(RH_NRF24::DataRate2Mbps, RH_NRF24::TransmitPower0dBm)) {
-    Serial.println("setRF failed");
+    Serial.println("NRF setRF failed");
     digitalWrite(LED_RED, HIGH);
   }
   digitalWrite(LED_BLUE, HIGH);
@@ -82,7 +83,7 @@ void loop()
     if (nrf24.recv(inMessage, &len))
     {
 
-      if(debug){
+      if (debug) {
         Serial.print("ID:");
         Serial.print(inMessage[0]);
         Serial.print(" POS:");
@@ -90,19 +91,17 @@ void loop()
         Serial.print(" TOUCHED:");
         Serial.println(inMessage[2]);
       }
-      
+
       digitalWrite(LED_BLUE, !digitalRead(LED_BLUE));
       delay(5);
-//
-//      // Send a reply
-//      uint8_t data[] = "Recieved";
-//      nrf24.send(data, sizeof(data));
-//      nrf24.waitPacketSent();
-//      //      Serial.println("                --> :)");
+      //
+      //      // Send a reply
+      //      uint8_t data[] = "Recieved";
+      //      nrf24.send(data, sizeof(data));
+      //      nrf24.waitPacketSent();
+      //      //      Serial.println("                --> :)");
 
-    }
-    else
-    {
+    } else {
       Serial.println("recv failed");
       digitalWrite(LED_RED, !digitalRead(LED_RED));
     }
@@ -136,7 +135,7 @@ void loop()
 }
 
 
-///////// WIELESS PROTOCOL /////////
+///////////////////////////////////////////////////////////////// COMMINCATION WITH PHIXELS /////////////////////////////////////////////////////////////////
 //CONTROLLER-->PHIXEL:  ID, POSITION, RED, GREEN, BLUE
 //PHIXEL-->CONTROLLER: ID, POSITION, TOUCHED
 
@@ -166,7 +165,7 @@ void RF_Send( int ballId, int yPos, int ledR, int ledG, int ledB ) {
       digitalWrite(LED_BLUE, HIGH);
       digitalWrite(LED_RED, LOW);
 
-      if(debug){
+      if (debug) {
         Serial.print("ID:");
         Serial.print(reply[0]);
         Serial.print(" POS:");
@@ -174,6 +173,14 @@ void RF_Send( int ballId, int yPos, int ledR, int ledG, int ledB ) {
         Serial.print(" TOUCHED:");
         Serial.println(reply[2]);
       }
+
+      ///SHOULD BE ON RECIEE CODE NOT SEND!!
+      //      if (calibration) {
+      //        Serial.println("CAL:");
+      //        Serial.print(reply[0]);
+      //        Serial.print(reply[1]);
+      //        Serial.println(reply[2]);
+      //      }
 
 
 
@@ -192,27 +199,48 @@ void RF_Send( int ballId, int yPos, int ledR, int ledG, int ledB ) {
 }
 
 
-void sendToNode(int ballId, int ballPos, int ballTouched){
+//  void sendToNode(int ballId, int ballPos, int ballTouched) {
   // Write code to inform Node Server
 }
 
 
+///////////////////////////////////////////////////////////////// COMMINCATION WITH APP /////////////////////////////////////////////////////////////////
 void serialEvent() {
   incomingByte = Serial.read();
 
-  // Initialize message from Server:
+  //INITIATE
   if (incomingByte == 'H') {
     digitalWrite(LED_BLUE, HIGH);
     Serial.println("< - - - - - - CONNECTED TO SERVER - - - - - - >");
   }
 
+  //CALLIBRATION
   if (incomingByte == 'S') {
-    digitalWrite(LED_BLUE, HIGH);
-    digitalWrite(LED_RED, HIGH);
-    Serial.println("< - - - - - - CALLIBRATION INITIATED - - - - - - >");
+    char inChar = (char)Serial.read();
+
+    if (inChar = 1) {
+      digitalWrite(LED_BLUE, HIGH);
+      digitalWrite(LED_RED, HIGH);
+      calibration = true;
+      Serial.println("< - - - - - - CALLIBRATION INITIATED - - - - - - >");
+
+    }
+
+    if (inChar = 0) {
+      digitalWrite(LED_BLUE, LOW);
+      digitalWrite(LED_RED, LOW);
+      for (int c = 0; c < 10; c++) {
+        digitalWrite(LED_BLUE, !digitalRead(LED_BLUE));
+        delay(40);
+      }
+      digitalWrite(LED_BLUE, HIGH);
+    }
+    calibration = false;
+    Serial.println("< - - - - - - CALLIBRATION COMPLETED - - - - - - >");
   }
 
-  //EG:  B001000255255255
+  //PHIXEL CONTROL
+  //EG: B001000255255255
 
   if (incomingByte == 'B') {
 
@@ -257,8 +285,8 @@ void serialEvent() {
 
     RF_Send(ballId, ballYpos, ballR, ballG, ballB);
 
+
   }
 
-
-}
+}//SERIAL EVENT
 

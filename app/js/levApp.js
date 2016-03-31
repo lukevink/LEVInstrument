@@ -29,8 +29,10 @@ visualizeRays = false;
 millis = Date.now();
 currentFrame = [];
 
-
-
+//Callibration flag
+calibrating = false;
+newCalID = false;
+currentBall = 0;
 
 //Web Socket client
 if (typeof(io) != "undefined") {
@@ -686,13 +688,19 @@ var mouse = new THREE.Vector2(),
               appCalibration();
               break;
           case 2:
-          //SEQUENCER
+              //SEQUENCER
+              appSequencer();
               break;
           case 3:
-          //INSTRUMENT
+              //INSTRUMENT
               break;
           default:
 
       }
 
+    }
+
+
+    function clearConsole(){
+      $( "#console" ).html( "" );
     }
